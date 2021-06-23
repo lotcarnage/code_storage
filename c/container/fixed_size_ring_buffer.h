@@ -1,8 +1,8 @@
 /* (c) 2021 @lot_carnage */
 
 /* Include guard */
-#ifndef FIXED_RING_BUFFER_H_INCLUDED
-#define FIXED_RING_BUFFER_H_INCLUDED
+#ifndef FIXED_SIZE_RING_BUFFER_H_INCLUDED
+#define FIXED_SIZE_RING_BUFFER_H_INCLUDED
 
 /*****************************************************************************
  * Header Include
@@ -21,14 +21,14 @@
 /*****************************************************************************
  * Type Definition
  *****************************************************************************/
-typedef void* FixedRingBufferPayload;
+typedef void* FixedSizeRingBufferElement;
 
-typedef struct FixedRingBuffer_ {
-	FixedRingBufferPayload* payload_buffer_;
-	uint32_t payload_buffer_size_;
+typedef struct FixedSizeRingBuffer_ {
+	FixedSizeRingBufferElement* buffer_for_elements_;
+	uint32_t max_elements_count_;
 	uint32_t wp_;
 	uint32_t rp_;
-} FixedRingBuffer;
+} FixedSizeRingBuffer;
 
 /*****************************************************************************
  * Variable Declaration
@@ -38,82 +38,83 @@ typedef struct FixedRingBuffer_ {
  * Function Declaration
  *****************************************************************************/
 /* インスタンスを構築する */
-void FixedRingBuffer_Construct(
-	FixedRingBuffer* frb_object_memory,
-	FixedRingBufferPayload payload_buffer[],
-	uint32_t payload_buffer_size);
+void FixedSizeRingBuffer_Construct(
+	FixedSizeRingBuffer* frb_object_memory,
+	FixedSizeRingBufferElement buffer_for_elements[],
+	uint32_t max_elements_count);
 
 /* インスタンスを破棄する */
-void FixedRingBuffer_Destruct(FixedRingBuffer* frb);
+void FixedSizeRingBuffer_Destruct(FixedSizeRingBuffer* frb);
 
 /* 積荷の数を取得する */
-uint32_t FixedRingBuffer_GetNumPayloads(const FixedRingBuffer* frb);
+uint32_t FixedSizeRingBuffer_GetNumElements(const FixedSizeRingBuffer* frb);
 
 /* 空き領域の数を取得する */
-uint32_t FixedRingBuffer_GetNumBlanks(const FixedRingBuffer* frb);
+uint32_t FixedSizeRingBuffer_GetNumBlanks(const FixedSizeRingBuffer* frb);
 
 /* Enqueue可能か */
-int FixedRingBuffer_IsEnqueueable(const FixedRingBuffer* frb);
+int FixedSizeRingBuffer_IsEnqueueable(const FixedSizeRingBuffer* frb);
 
 /* Dequeue可能か */
-int FixedRingBuffer_IsDequeueable(const FixedRingBuffer* frb);
+int FixedSizeRingBuffer_IsDequeueable(const FixedSizeRingBuffer* frb);
 
 /* Push可能か */
-int FixedRingBuffer_IsPushable(const FixedRingBuffer* frb);
+int FixedSizeRingBuffer_IsPushable(const FixedSizeRingBuffer* frb);
 
 /* Pop可能か */
-int FixedRingBuffer_IsPoppable(const FixedRingBuffer* frb);
+int FixedSizeRingBuffer_IsPoppable(const FixedSizeRingBuffer* frb);
 
 /* Enqueue
  * 容量オーバ時の結果は未定義
  */
-void FixedRingBuffer_Enqueue(
-	FixedRingBuffer* frb,
-	FixedRingBufferPayload payload);
+void FixedSizeRingBuffer_Enqueue(
+	FixedSizeRingBuffer* frb,
+	FixedSizeRingBufferElement element);
 
 /* Push
  * 容量オーバ時の結果は未定義
  */
-void FixedRingBuffer_Push(
-	FixedRingBuffer* frb,
-	FixedRingBufferPayload payload);
+void FixedSizeRingBuffer_Push(
+	FixedSizeRingBuffer* frb,
+	FixedSizeRingBufferElement element);
 
 /* Dequeue
  * 積荷が無い場合の結果は未定義
  */
-FixedRingBufferPayload FixedRingBuffer_Dequeue(FixedRingBuffer* frb);
+FixedSizeRingBufferElement FixedSizeRingBuffer_Dequeue(
+	FixedSizeRingBuffer* frb);
 
 /* Pop
  * 積荷が無い場合の結果は未定義
  */
-FixedRingBufferPayload FixedRingBuffer_Pop(FixedRingBuffer* frb);
+FixedSizeRingBufferElement FixedSizeRingBuffer_Pop(FixedSizeRingBuffer* frb);
 
 /* チェックありEnqueue
  * 成功時は0以外、失敗時は0を返す
  */
-int FixedRingBuffer_EnqueueWithCheck(
-	FixedRingBuffer* frb,
-	FixedRingBufferPayload payload);
+int FixedSizeRingBuffer_EnqueueWithCheck(
+	FixedSizeRingBuffer* frb,
+	FixedSizeRingBufferElement element);
 
 /* チェックありPush
  * 成功時は0以外、失敗時は0を返す
  */
-int FixedRingBuffer_PushWithCheck(
-	FixedRingBuffer* frb,
-	FixedRingBufferPayload payload);
+int FixedSizeRingBuffer_PushWithCheck(
+	FixedSizeRingBuffer* frb,
+	FixedSizeRingBufferElement element);
 
 /* チェックありDequeue
  * 成功時は0以外、失敗時は0を返す
  */
-int FixedRingBuffer_DequeueWithCheck(
-	FixedRingBuffer* frb,
-	FixedRingBufferPayload* dequeued_payload);
+int FixedSizeRingBuffer_DequeueWithCheck(
+	FixedSizeRingBuffer* frb,
+	FixedSizeRingBufferElement* dequeued_element);
 
 /* チェックありPop
  * 成功時は0以外、失敗時は0を返す
  */
-int FixedRingBuffer_PopWithCheck(
-	FixedRingBuffer* frb,
-	FixedRingBufferPayload* popped_payload);
+int FixedSizeRingBuffer_PopWithCheck(
+	FixedSizeRingBuffer* frb,
+	FixedSizeRingBufferElement* popped_element);
 
-#endif /* FIXED_RING_BUFFER_H_INCLUDED */
+#endif /* FIXED_SIZE_RING_BUFFER_H_INCLUDED */
