@@ -43,64 +43,64 @@ static void test_assert(int condition, int line)
 
 int main(int argc, char* argv[])
 {
-	MedianQueue bhq[1];
+	MedianQueue mq[1];
 	MedianQueueElement buffer_for_elements[5];
 	uint32_t heap_indices[5];
 	uint32_t heap[5];
 	MedianQueue_Construct(
-		bhq, buffer_for_elements, heap_indices, heap, 5);
+		mq, buffer_for_elements, heap_indices, heap, 5);
 
 	/* Queueu API test */
-	MedianQueue_Enqueue(bhq, 1);
-	TEST_ASSERT(MedianQueue_GetLowerMedian(bhq) == 1);
-	TEST_ASSERT(MedianQueue_GetUpperMedian(bhq) == 1);
-	MedianQueue_Enqueue(bhq, 2);
-	TEST_ASSERT(MedianQueue_GetLowerMedian(bhq) == 1);
-	TEST_ASSERT(MedianQueue_GetUpperMedian(bhq) == 2);
-	MedianQueue_Enqueue(bhq, 3);
-	TEST_ASSERT(MedianQueue_GetLowerMedian(bhq) == 2);
-	TEST_ASSERT(MedianQueue_GetUpperMedian(bhq) == 2);
-	MedianQueue_Enqueue(bhq, 4);
-	TEST_ASSERT(MedianQueue_GetLowerMedian(bhq) == 2);
-	TEST_ASSERT(MedianQueue_GetUpperMedian(bhq) == 3);
-	MedianQueue_Enqueue(bhq, 5);
-	TEST_ASSERT(MedianQueue_GetLowerMedian(bhq) == 3);
-	TEST_ASSERT(MedianQueue_GetUpperMedian(bhq) == 3);
-	TEST_ASSERT(MedianQueue_Dequeue(bhq) == 1);
-	TEST_ASSERT(MedianQueue_GetLowerMedian(bhq) == 3);
-	TEST_ASSERT(MedianQueue_GetUpperMedian(bhq) == 4);
-	TEST_ASSERT(MedianQueue_Dequeue(bhq) == 2);
-	TEST_ASSERT(MedianQueue_GetLowerMedian(bhq) == 4);
-	TEST_ASSERT(MedianQueue_GetUpperMedian(bhq) == 4);
-	TEST_ASSERT(MedianQueue_Dequeue(bhq) == 3);
-	TEST_ASSERT(MedianQueue_GetLowerMedian(bhq) == 4);
-	TEST_ASSERT(MedianQueue_GetUpperMedian(bhq) == 5);
-	TEST_ASSERT(MedianQueue_Dequeue(bhq) == 4);
-	TEST_ASSERT(MedianQueue_GetLowerMedian(bhq) == 5);
-	TEST_ASSERT(MedianQueue_GetUpperMedian(bhq) == 5);
-	TEST_ASSERT(MedianQueue_Dequeue(bhq) == 5);
+	MedianQueue_Enqueue(mq, 1);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 1);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 1);
+	MedianQueue_Enqueue(mq, 2);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 1);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 2);
+	MedianQueue_Enqueue(mq, 3);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 2);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 2);
+	MedianQueue_Enqueue(mq, 4);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 2);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 3);
+	MedianQueue_Enqueue(mq, 5);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 3);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 3);
+	TEST_ASSERT(MedianQueue_Dequeue(mq) == 1);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 3);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 4);
+	TEST_ASSERT(MedianQueue_Dequeue(mq) == 2);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 4);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 4);
+	TEST_ASSERT(MedianQueue_Dequeue(mq) == 3);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 4);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 5);
+	TEST_ASSERT(MedianQueue_Dequeue(mq) == 4);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 5);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 5);
+	TEST_ASSERT(MedianQueue_Dequeue(mq) == 5);
 
 
 	/* Check API test */
-	TEST_ASSERT(MedianQueue_IsEnqueueable(bhq));
-	TEST_ASSERT(!MedianQueue_IsDequeueable(bhq));
-	MedianQueue_Enqueue(bhq, 1);
-	TEST_ASSERT(MedianQueue_IsEnqueueable(bhq));
-	TEST_ASSERT(MedianQueue_IsDequeueable(bhq));
-	MedianQueue_Enqueue(bhq, 2);
-	TEST_ASSERT(MedianQueue_IsEnqueueable(bhq));
-	TEST_ASSERT(MedianQueue_IsDequeueable(bhq));
-	MedianQueue_Enqueue(bhq, 3);
-	TEST_ASSERT(MedianQueue_IsEnqueueable(bhq));
-	TEST_ASSERT(MedianQueue_IsDequeueable(bhq));
-	MedianQueue_Enqueue(bhq, 4);
-	TEST_ASSERT(MedianQueue_IsEnqueueable(bhq));
-	TEST_ASSERT(MedianQueue_IsDequeueable(bhq));
-	MedianQueue_Enqueue(bhq, 5);
-	TEST_ASSERT(!MedianQueue_IsEnqueueable(bhq));
-	TEST_ASSERT(MedianQueue_IsDequeueable(bhq));
+	TEST_ASSERT(MedianQueue_IsEnqueueable(mq));
+	TEST_ASSERT(!MedianQueue_IsDequeueable(mq));
+	MedianQueue_Enqueue(mq, 1);
+	TEST_ASSERT(MedianQueue_IsEnqueueable(mq));
+	TEST_ASSERT(MedianQueue_IsDequeueable(mq));
+	MedianQueue_Enqueue(mq, 2);
+	TEST_ASSERT(MedianQueue_IsEnqueueable(mq));
+	TEST_ASSERT(MedianQueue_IsDequeueable(mq));
+	MedianQueue_Enqueue(mq, 3);
+	TEST_ASSERT(MedianQueue_IsEnqueueable(mq));
+	TEST_ASSERT(MedianQueue_IsDequeueable(mq));
+	MedianQueue_Enqueue(mq, 4);
+	TEST_ASSERT(MedianQueue_IsEnqueueable(mq));
+	TEST_ASSERT(MedianQueue_IsDequeueable(mq));
+	MedianQueue_Enqueue(mq, 5);
+	TEST_ASSERT(!MedianQueue_IsEnqueueable(mq));
+	TEST_ASSERT(MedianQueue_IsDequeueable(mq));
 
-	MedianQueue_Destruct(bhq);
+	MedianQueue_Destruct(mq);
 
 	return s_test_result;
 }

@@ -20,6 +20,8 @@
 /*****************************************************************************
  * Type Definition
  *****************************************************************************/
+typedef int (*MedianQueuePrivate_ComparisonOperator)(
+	MedianQueueElement lhv, MedianQueueElement rhv);
 
 /*****************************************************************************
  * Variable Declaration
@@ -45,18 +47,33 @@ static uint32_t MedianQueuePrivate_GetNumElements(
 	return (mq->wp_ - mq->rp_);
 }
 
-static void MedianQueuePriavte_LHUpHeap(
-	MedianQueue* mq, uint32_t starting_index_in_heap)
+/* lhvv < rhv */
+static int MedianQueuePriavte_IsLhvLtRhv(
+	MedianQueueElement lhv, MedianQueueElement rhv)
+{
+	return (lhv < rhv);
+}
+
+/* lhv > rhv */
+static int MedianQueuePriavte_IsLhvGtRhv(
+	MedianQueueElement lhv, MedianQueueElement rhv)
+{
+	return (lhv > rhv);
+}
+
+static void MedianQueuePrivate_UpHeapCore(
+	MedianQueuePrivate_ComparisonOperator comparison_operator,
+	MedianQueueElement const * elements_queue,
+	uint32_t* heap,
+	uint32_t* indices_queue,
+	uint32_t current_index_in_heap,
+	uint32_t heap_index_offset)
 {
 	MedianQueueElement parent_value;
 	MedianQueueElement current_value;
 	uint32_t parent_index_in_queue;
 	uint32_t current_index_in_queue;
 	uint32_t parent_index_in_heap;
-	uint32_t current_index_in_heap = starting_index_in_heap;
-	MedianQueueElement* elements_queue = mq->buffer_for_elements_;
-	uint32_t* heap = mq->lh_heap_;
-	uint32_t* indices_queue = mq->buffer_for_heap_indices_;
 	for (;;) {
 		if (current_index_in_heap == 0U) {
 			break;
@@ -66,12 +83,12 @@ static void MedianQueuePriavte_LHUpHeap(
 		parent_index_in_heap = (current_index_in_heap - 1U) / 2U;
 		parent_index_in_queue = heap[parent_index_in_heap];
 		parent_value = elements_queue[parent_index_in_queue];
-		if (parent_value < current_value) {
+		if (comparison_operator(current_value, parent_value)) {
 			/* swap */
 			heap[parent_index_in_heap] = current_index_in_queue;
 			heap[current_index_in_heap] = parent_index_in_queue;
-			indices_queue[parent_index_in_queue] = current_index_in_heap;
-			indices_queue[current_index_in_queue] = parent_index_in_heap;
+			indices_queue[parent_index_in_queue] = current_index_in_heap + heap_index_offset;
+			indices_queue[current_index_in_queue] = parent_index_in_heap + heap_index_offset;
 			current_index_in_heap = parent_index_in_heap;
 		} else {
 			break;
@@ -80,32 +97,33 @@ static void MedianQueuePriavte_LHUpHeap(
 	return;
 }
 
-static int MedianQueuePriavte_LHDownHeap(
-	MedianQueue* mq, uint32_t starting_index_in_heap)
+static int MedianQueuePriavte_DownHeapCore(
+	MedianQueuePrivate_ComparisonOperator comparison_operator,
+	MedianQueueElement const * elements_queue,
+	uint32_t* heap,
+	uint32_t num_elements_in_heap,
+	uint32_t* indices_queue,
+	uint32_t current_index_in_heap,
+	uint32_t heap_index_offset)
 {
 	MedianQueueElement child_value;
 	MedianQueueElement current_value;
 	uint32_t child_index_in_queue;
 	uint32_t current_index_in_queue;
 	uint32_t child_index_in_heap;
-	uint32_t current_index_in_heap = starting_index_in_heap;
-	uint32_t num_elements = MedianQueuePrivate_GetNumElements(mq) / 2U;
-	MedianQueueElement* elements_queue = mq->buffer_for_elements_;
-	uint32_t* heap = mq->lh_heap_;
-	uint32_t* indices_queue = mq->buffer_for_heap_indices_;
 	int is_updated = MEDIANQUEUE_LOCAL_FALSE;
 
 	for (;;) {
 		/* Left hand child */
 		child_index_in_heap = (current_index_in_heap + 1U) * 2U - 1U;
-		if (num_elements <= child_index_in_heap) {
+		if (num_elements_in_heap <= child_index_in_heap) {
 			break;
 		}
 		current_index_in_queue = heap[current_index_in_heap];
 		current_value = elements_queue[current_index_in_queue];
 		child_index_in_queue = heap[child_index_in_heap];
 		child_value = elements_queue[child_index_in_queue];
-		if (current_value < child_value) {
+		if (comparison_operator(current_value, child_value)) {
 			/* swap */
 			heap[child_index_in_heap] = current_index_in_queue;
 			heap[current_index_in_heap] = child_index_in_queue;
@@ -118,14 +136,14 @@ static int MedianQueuePriavte_LHDownHeap(
 
 		/* Right hand child */
 		child_index_in_heap = child_index_in_heap + 1U;
-		if (num_elements <= child_index_in_heap) {
+		if (num_elements_in_heap <= child_index_in_heap) {
 			break;
 		}
 		current_index_in_queue = heap[current_index_in_heap];
 		current_value = elements_queue[current_index_in_queue];
 		child_index_in_queue = heap[child_index_in_heap];
 		child_value = elements_queue[child_index_in_queue];
-		if (current_value < child_value) {
+		if (comparison_operator(current_value, child_value)) {
 			/* swap */
 			heap[child_index_in_heap] = current_index_in_queue;
 			heap[current_index_in_heap] = child_index_in_queue;
@@ -140,101 +158,62 @@ static int MedianQueuePriavte_LHDownHeap(
 	return is_updated;
 }
 
+
+static void MedianQueuePriavte_LHUpHeap(
+	MedianQueue* mq, uint32_t starting_index_in_heap)
+{
+	MedianQueuePrivate_UpHeapCore(
+		MedianQueuePriavte_IsLhvGtRhv,
+		mq->buffer_for_elements_,
+		mq->lh_heap_,
+		mq->buffer_for_heap_indices_,
+		starting_index_in_heap,
+		0U);
+	return;
+}
+
+static int MedianQueuePriavte_LHDownHeap(
+	MedianQueue* mq, uint32_t starting_index_in_heap)
+{
+	uint32_t num_elements = MedianQueuePrivate_GetNumElements(mq) / 2U;
+	int is_updated = MedianQueuePriavte_DownHeapCore(
+		MedianQueuePriavte_IsLhvLtRhv,
+		mq->buffer_for_elements_,
+		mq->lh_heap_,
+		num_elements,
+		mq->buffer_for_heap_indices_,
+		starting_index_in_heap,
+		0U);
+	return is_updated;
+}
+
 static void MedianQueuePriavte_RHUpHeap(
 	MedianQueue* mq, uint32_t starting_index_in_heap)
 {
-	MedianQueueElement parent_value;
-	MedianQueueElement current_value;
-	uint32_t parent_index_in_queue;
-	uint32_t current_index_in_queue;
-	uint32_t parent_index_in_heap;
-	uint32_t current_index_in_heap = starting_index_in_heap;
-	MedianQueueElement* elements_queue = mq->buffer_for_elements_;
-	uint32_t* heap = mq->rh_heap_;
-	uint32_t* indices_queue = mq->buffer_for_heap_indices_;
 	uint32_t heap_index_offset = (mq->max_elements_count_ + 1U) / 2U;
-
-	for (;;) {
-		if (current_index_in_heap == 0U) {
-			break;
-		}
-		current_index_in_queue = heap[current_index_in_heap];
-		current_value = elements_queue[current_index_in_queue];
-		parent_index_in_heap = (current_index_in_heap - 1U) / 2U;
-		parent_index_in_queue = heap[parent_index_in_heap];
-		parent_value = elements_queue[parent_index_in_queue];
-		if (current_value < parent_value) {
-			/* swap */
-			heap[parent_index_in_heap] = current_index_in_queue;
-			heap[current_index_in_heap] = parent_index_in_queue;
-			indices_queue[parent_index_in_queue] = current_index_in_heap + heap_index_offset;
-			indices_queue[current_index_in_queue] = parent_index_in_heap + heap_index_offset;
-			current_index_in_heap = parent_index_in_heap;
-		} else {
-			break;
-		}
-	}
+	MedianQueuePrivate_UpHeapCore(
+		MedianQueuePriavte_IsLhvLtRhv,
+		mq->buffer_for_elements_,
+		mq->rh_heap_,
+		mq->buffer_for_heap_indices_,
+		starting_index_in_heap,
+		heap_index_offset);
 	return;
 }
 
 static int MedianQueuePriavte_RHDownHeap(
 	MedianQueue* mq, uint32_t starting_index_in_heap)
 {
-	MedianQueueElement child_value;
-	MedianQueueElement current_value;
-	uint32_t child_index_in_queue;
-	uint32_t current_index_in_queue;
-	uint32_t child_index_in_heap;
-	uint32_t current_index_in_heap = starting_index_in_heap;
 	uint32_t num_elements = (MedianQueuePrivate_GetNumElements(mq) + 1U) / 2U;
-	MedianQueueElement* elements_queue = mq->buffer_for_elements_;
-	uint32_t* heap = mq->rh_heap_;
-	uint32_t* indices_queue = mq->buffer_for_heap_indices_;
-	int is_updated = MEDIANQUEUE_LOCAL_FALSE;
 	uint32_t heap_index_offset = (mq->max_elements_count_ + 1U) / 2U;
-
-	for (;;) {
-		/* Left hand child */
-		child_index_in_heap = (current_index_in_heap + 1U) * 2U - 1U;
-		if (num_elements <= child_index_in_heap) {
-			break;
-		}
-		current_index_in_queue = heap[current_index_in_heap];
-		current_value = elements_queue[current_index_in_queue];
-		child_index_in_queue = heap[child_index_in_heap];
-		child_value = elements_queue[child_index_in_queue];
-		if (child_value < current_value) {
-			/* swap */
-			heap[child_index_in_heap] = current_index_in_queue;
-			heap[current_index_in_heap] = child_index_in_queue;
-			indices_queue[child_index_in_queue] = current_index_in_heap + heap_index_offset;
-			indices_queue[current_index_in_queue] = child_index_in_heap + heap_index_offset;
-			current_index_in_heap = child_index_in_heap;
-			is_updated = MEDIANQUEUE_LOCAL_TRUE;
-			continue;
-		}
-
-		/* Right hand child */
-		child_index_in_heap = child_index_in_heap + 1U;
-		if (num_elements <= child_index_in_heap) {
-			break;
-		}
-		current_index_in_queue = heap[current_index_in_heap];
-		current_value = elements_queue[current_index_in_queue];
-		child_index_in_queue = heap[child_index_in_heap];
-		child_value = elements_queue[child_index_in_queue];
-		if (current_value < child_value) {
-			/* swap */
-			heap[child_index_in_heap] = current_index_in_queue;
-			heap[current_index_in_heap] = child_index_in_queue;
-			indices_queue[child_index_in_queue] = current_index_in_heap + heap_index_offset;
-			indices_queue[current_index_in_queue] = child_index_in_heap + heap_index_offset;
-			current_index_in_heap = child_index_in_heap;
-			is_updated = MEDIANQUEUE_LOCAL_TRUE;
-			continue;
-		}
-		break;
-	}
+	int is_updated = MedianQueuePriavte_DownHeapCore(
+		MedianQueuePriavte_IsLhvGtRhv,
+		mq->buffer_for_elements_,
+		mq->rh_heap_,
+		num_elements,
+		mq->buffer_for_heap_indices_,
+		starting_index_in_heap,
+		heap_index_offset);
 	return is_updated;
 }
 
@@ -308,17 +287,20 @@ int MedianQueue_IsDequeueable(
 void MedianQueue_Enqueue(
 	MedianQueue* mq, MedianQueueElement element)
 {
-	uint32_t num_elements = MedianQueuePrivate_GetNumElements(mq);
+	uint32_t const num_elements = MedianQueuePrivate_GetNumElements(mq);
+	uint32_t const last_index_in_lh_heap = num_elements / 2U;
+	uint32_t const last_index_in_rh_heap = (num_elements + 1U) / 2U;
+	uint32_t const heap_index_offset = (mq->max_elements_count_ + 1U) / 2U;
+	uint32_t const rounded_wp = mq->wp_ % mq->max_elements_count_;
+	mq->wp_++;
+
 	/* 要素数が奇数か偶数か */
 	if ((num_elements % 2U) != 0U) {
-		MedianQueueElement upper_median =
-			MedianQueue_GetUpperMedian(mq);
+		MedianQueueElement upper_median = MedianQueue_GetUpperMedian(mq);
 		if (upper_median < element) {
-			/* RH中央値を取り出してLHへ入れる */
 			uint32_t index_in_queue = mq->rh_heap_[0U];
-			uint32_t last_index_in_lh_heap = num_elements / 2U;
-			uint32_t rounded_wp = mq->wp_ % mq->max_elements_count_;
-			uint32_t heap_index_offset = (mq->max_elements_count_ + 1U) / 2U;
+
+			/* RHから中央値を取り出してLHへ入れる */
 			mq->lh_heap_[last_index_in_lh_heap] = index_in_queue;
 			mq->buffer_for_heap_indices_[index_in_queue] = last_index_in_lh_heap;
 
@@ -326,7 +308,6 @@ void MedianQueue_Enqueue(
 			mq->buffer_for_elements_[rounded_wp] = element;
 			mq->buffer_for_heap_indices_[rounded_wp] = 0U + heap_index_offset;
 			mq->rh_heap_[0U] = rounded_wp;
-			mq->wp_++;
 
 			/* LHの末尾を起点にUpHeap */
 			MedianQueuePriavte_LHUpHeap(mq, last_index_in_lh_heap);
@@ -334,25 +315,19 @@ void MedianQueue_Enqueue(
 			/* RHのルートを起点にDownHeap */
 			MedianQueuePriavte_RHDownHeap(mq, 0U);
 		} else {
-			uint32_t rounded_wp = mq->wp_ % mq->max_elements_count_;
-			uint32_t last_index_in_lh_heap = num_elements / 2U;
+			/* elementをLHの末尾に入れる */
 			mq->buffer_for_elements_[rounded_wp] = element;
 			mq->buffer_for_heap_indices_[rounded_wp] = last_index_in_lh_heap;
-			/* elementをLHの末尾に入れる */
 			mq->lh_heap_[last_index_in_lh_heap] = rounded_wp;
-			mq->wp_++;
+
 			/* LHの末尾を起点にUpHeap */
 			MedianQueuePriavte_LHUpHeap(mq, last_index_in_lh_heap);
 		}
 	} else {
-		uint32_t heap_index_offset = (mq->max_elements_count_ + 1U) / 2U;
-		uint32_t rounded_wp = mq->wp_ % mq->max_elements_count_;
-		uint32_t last_index_in_rh_heap = (num_elements + 1U) / 2U;
-		mq->buffer_for_elements_[rounded_wp] = element;
 		/* elementをRHの末尾に入れる */
-		mq->rh_heap_[last_index_in_rh_heap] = rounded_wp;
+		mq->buffer_for_elements_[rounded_wp] = element;
 		mq->buffer_for_heap_indices_[rounded_wp] = last_index_in_rh_heap + heap_index_offset;
-		mq->wp_++;
+		mq->rh_heap_[last_index_in_rh_heap] = rounded_wp;
 
 		/* RHの末尾を起点にUpHeap */
 		MedianQueuePriavte_RHUpHeap(mq, last_index_in_rh_heap);
