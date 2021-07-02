@@ -127,8 +127,8 @@ static int MedianQueuePriavte_DownHeapCore(
 			/* swap */
 			heap[child_index_in_heap] = current_index_in_queue;
 			heap[current_index_in_heap] = child_index_in_queue;
-			indices_queue[child_index_in_queue] = current_index_in_heap;
-			indices_queue[current_index_in_queue] = child_index_in_heap;
+			indices_queue[child_index_in_queue] = current_index_in_heap + heap_index_offset;
+			indices_queue[current_index_in_queue] = child_index_in_heap + heap_index_offset;
 			current_index_in_heap = child_index_in_heap;
 			is_updated = MEDIANQUEUE_LOCAL_TRUE;
 			continue;
@@ -147,8 +147,8 @@ static int MedianQueuePriavte_DownHeapCore(
 			/* swap */
 			heap[child_index_in_heap] = current_index_in_queue;
 			heap[current_index_in_heap] = child_index_in_queue;
-			indices_queue[child_index_in_queue] = current_index_in_heap;
-			indices_queue[current_index_in_queue] = child_index_in_heap;
+			indices_queue[child_index_in_queue] = current_index_in_heap + heap_index_offset;
+			indices_queue[current_index_in_queue] = child_index_in_heap + heap_index_offset;
 			current_index_in_heap = child_index_in_heap;
 			is_updated = MEDIANQUEUE_LOCAL_TRUE;
 			continue;
@@ -292,7 +292,6 @@ void MedianQueue_Enqueue(
 	uint32_t const last_index_in_rh_heap = (num_elements + 1U) / 2U;
 	uint32_t const heap_index_offset = (mq->max_elements_count_ + 1U) / 2U;
 	uint32_t const rounded_wp = mq->wp_ % mq->max_elements_count_;
-	mq->wp_++;
 
 	/* 要素数が奇数か偶数か */
 	if ((num_elements % 2U) != 0U) {
@@ -323,6 +322,33 @@ void MedianQueue_Enqueue(
 			/* LHの末尾を起点にUpHeap */
 			MedianQueuePriavte_LHUpHeap(mq, last_index_in_lh_heap);
 		}
+	} else if (0U < num_elements) {
+		MedianQueueElement lower_median = MedianQueue_GetLowerMedian(mq);
+		if (element < lower_median) {
+			uint32_t index_in_queue = mq->lh_heap_[0U];
+			/* LHのルートを取り出してRH末尾にいれる */
+			mq->rh_heap_[last_index_in_rh_heap] = index_in_queue;
+			mq->buffer_for_heap_indices_[index_in_queue] = last_index_in_rh_heap + heap_index_offset;
+
+			/* elementをLHのルートに入れる */
+			mq->buffer_for_elements_[rounded_wp] = element;
+			mq->buffer_for_heap_indices_[rounded_wp] = 0U;
+			mq->lh_heap_[0U] = rounded_wp;
+
+			/* RHの末尾を起点にUpHeap */
+			MedianQueuePriavte_RHUpHeap(mq, last_index_in_rh_heap);
+
+			/* LHのルートを起点にDownHeap */
+			MedianQueuePriavte_LHDownHeap(mq, 0U);
+		} else {
+			/* elementをRHの末尾に入れる */
+			mq->buffer_for_elements_[rounded_wp] = element;
+			mq->buffer_for_heap_indices_[rounded_wp] = last_index_in_rh_heap + heap_index_offset;
+			mq->rh_heap_[last_index_in_rh_heap] = rounded_wp;
+
+			/* RHの末尾を起点にUpHeap */
+			MedianQueuePriavte_RHUpHeap(mq, last_index_in_rh_heap);
+		}
 	} else {
 		/* elementをRHの末尾に入れる */
 		mq->buffer_for_elements_[rounded_wp] = element;
@@ -332,6 +358,7 @@ void MedianQueue_Enqueue(
 		/* RHの末尾を起点にUpHeap */
 		MedianQueuePriavte_RHUpHeap(mq, last_index_in_rh_heap);
 	}
+	mq->wp_++;
 	return;
 }
 
@@ -345,11 +372,6 @@ MedianQueueElement MedianQueue_Dequeue(
 
 	/* キューから値を取り出す */
 	element = mq->buffer_for_elements_[mq->rp_];
-	mq->rp_++;
-	if (mq->max_elements_count_ <= mq->rp_) {
-		mq->wp_ -= mq->max_elements_count_;
-		mq->rp_ -= mq->max_elements_count_;
-	}
 
 	/* 要素数が奇数か偶数か */
 	if ((num_elements % 2U) != 0U) {
@@ -401,7 +423,7 @@ MedianQueueElement MedianQueue_Dequeue(
 			/* 埋めた箇所を起点にRHをUpHeap */
 			MedianQueuePriavte_RHUpHeap(mq, index_in_heap);
 			/* LHのルートにLHの末尾を移動する */
-			uint32_t lh_num_elements = num_elements / 2U;
+			uint32_t lh_num_elements = num_elements / 2U - 1U;
 			index_in_queue = mq->lh_heap_[lh_num_elements];
 			mq->lh_heap_[0] = index_in_queue;
 			mq->buffer_for_heap_indices_[index_in_queue] = 0;
@@ -411,16 +433,25 @@ MedianQueueElement MedianQueue_Dequeue(
 			/* LHから要素を取り出した */
 			/* 取り出した箇所にLHの末尾を移動する */
 			uint32_t index_in_queue;
-			uint32_t lh_num_elements = num_elements / 2U;
-			index_in_queue = mq->lh_heap_[lh_num_elements];
-			mq->lh_heap_[index_in_heap] = index_in_queue;
-			mq->buffer_for_heap_indices_[index_in_queue] = index_in_heap;
-			/* 埋めた箇所を起点にLHをDownHeap */
-			if (!MedianQueuePriavte_LHDownHeap(mq, index_in_heap)) {
-				/* DownHeapで変化がなかったら埋めた箇所を起点にRHをUpHeap */
-				MedianQueuePriavte_LHUpHeap(mq, index_in_heap);
+			uint32_t tail_index_in_heap = num_elements / 2U - 1U;
+			if (index_in_heap != tail_index_in_heap) {
+				index_in_queue = mq->lh_heap_[tail_index_in_heap];
+				mq->lh_heap_[index_in_heap] = index_in_queue;
+				mq->buffer_for_heap_indices_[index_in_queue] = index_in_heap;
+				/* 埋めた箇所を起点にLHをDownHeap */
+				if (!MedianQueuePriavte_LHDownHeap(mq, index_in_heap)) {
+					/* DownHeapで変化がなかったら埋めた箇所を起点にRHをUpHeap */
+					MedianQueuePriavte_LHUpHeap(mq, index_in_heap);
+				}
 			}
 		}
 	}
+
+	mq->rp_++;
+	if (mq->max_elements_count_ <= mq->rp_) {
+		mq->wp_ -= mq->max_elements_count_;
+		mq->rp_ -= mq->max_elements_count_;
+	}
+
 	return element;
 }

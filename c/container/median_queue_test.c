@@ -80,6 +80,35 @@ int main(int argc, char* argv[])
 	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 5);
 	TEST_ASSERT(MedianQueue_Dequeue(mq) == 5);
 
+	MedianQueue_Enqueue(mq, 1);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 1);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 1);
+	MedianQueue_Enqueue(mq, 3);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 1);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 3);
+	MedianQueue_Enqueue(mq, 4);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 3);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 3);
+	MedianQueue_Enqueue(mq, 5);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 3);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 4);
+	MedianQueue_Enqueue(mq, 2);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 3);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 3);
+
+	TEST_ASSERT(MedianQueue_Dequeue(mq) == 1);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 3);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 4);
+	TEST_ASSERT(MedianQueue_Dequeue(mq) == 3);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 4);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 4);
+	TEST_ASSERT(MedianQueue_Dequeue(mq) == 4);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 2);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 5);
+	TEST_ASSERT(MedianQueue_Dequeue(mq) == 5);
+	TEST_ASSERT(MedianQueue_GetLowerMedian(mq) == 2);
+	TEST_ASSERT(MedianQueue_GetUpperMedian(mq) == 2);
+	TEST_ASSERT(MedianQueue_Dequeue(mq) == 2);
 
 	/* Check API test */
 	TEST_ASSERT(MedianQueue_IsEnqueueable(mq));
