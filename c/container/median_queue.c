@@ -137,54 +137,62 @@ static int MedianQueuePriavte_DownHeapCore(
 	uint32_t current_index_in_heap,
 	uint32_t heap_index_offset)
 {
-	MedianQueueElement child_value;
 	MedianQueueElement current_value;
+	MedianQueueElement child_value;
 	uint32_t child_index_in_queue;
 	uint32_t current_index_in_queue;
+	uint32_t lh_child_index_in_heap;
+	uint32_t rh_child_index_in_heap;
 	uint32_t child_index_in_heap;
+
 	int is_updated = MEDIANQUEUE_LOCAL_FALSE;
 
 	for (;;) {
 		/* Left hand child */
-		child_index_in_heap = (current_index_in_heap + 1U) * 2U - 1U;
-		if (num_elements_in_heap <= child_index_in_heap) {
+		lh_child_index_in_heap = (current_index_in_heap + 1U) * 2U - 1U;
+		if (num_elements_in_heap <= lh_child_index_in_heap) {
 			break;
-		}
-		current_index_in_queue = heap[current_index_in_heap];
-		current_value = elements_queue[current_index_in_queue];
-		child_index_in_queue = heap[child_index_in_heap];
-		child_value = elements_queue[child_index_in_queue];
-		if (comparison_operator(current_value, child_value)) {
-			/* swap */
-			heap[child_index_in_heap] = current_index_in_queue;
-			heap[current_index_in_heap] = child_index_in_queue;
-			indices_queue[child_index_in_queue] = current_index_in_heap + heap_index_offset;
-			indices_queue[current_index_in_queue] = child_index_in_heap + heap_index_offset;
-			current_index_in_heap = child_index_in_heap;
-			is_updated = MEDIANQUEUE_LOCAL_TRUE;
-			continue;
 		}
 
-		/* Right hand child */
-		child_index_in_heap = child_index_in_heap + 1U;
-		if (num_elements_in_heap <= child_index_in_heap) {
-			break;
+		rh_child_index_in_heap = lh_child_index_in_heap + 1U;
+		if (num_elements_in_heap <= rh_child_index_in_heap) {
+			/* 左側の子のみ存在 */
+			child_index_in_heap = lh_child_index_in_heap;
+			child_index_in_queue = heap[child_index_in_heap];
+			child_value = elements_queue[child_index_in_queue];
+		} else {
+			/* 左右の子が存在 */
+			MedianQueueElement lh_child_value;
+			MedianQueueElement rh_child_value;
+			uint32_t lh_child_index_in_queue;
+			uint32_t rh_child_index_in_queue;
+			lh_child_index_in_queue = heap[lh_child_index_in_heap];
+			lh_child_value = elements_queue[lh_child_index_in_queue];
+			rh_child_index_in_queue = heap[rh_child_index_in_heap];
+			rh_child_value = elements_queue[rh_child_index_in_queue];
+			if (comparison_operator(lh_child_value, rh_child_value)) {
+				child_index_in_heap = rh_child_index_in_heap;
+				child_index_in_queue = rh_child_index_in_queue;
+				child_value = rh_child_value;
+			} else {
+				child_index_in_heap = lh_child_index_in_heap;
+				child_index_in_queue = lh_child_index_in_queue;
+				child_value = lh_child_value;
+			}
 		}
+
 		current_index_in_queue = heap[current_index_in_heap];
 		current_value = elements_queue[current_index_in_queue];
-		child_index_in_queue = heap[child_index_in_heap];
-		child_value = elements_queue[child_index_in_queue];
-		if (comparison_operator(current_value, child_value)) {
-			/* swap */
-			heap[child_index_in_heap] = current_index_in_queue;
-			heap[current_index_in_heap] = child_index_in_queue;
-			indices_queue[child_index_in_queue] = current_index_in_heap + heap_index_offset;
-			indices_queue[current_index_in_queue] = child_index_in_heap + heap_index_offset;
-			current_index_in_heap = child_index_in_heap;
-			is_updated = MEDIANQUEUE_LOCAL_TRUE;
-			continue;
+		if (!comparison_operator(current_value, child_value)) {
+			break;
 		}
-		break;
+		/* swap */
+		heap[child_index_in_heap] = current_index_in_queue;
+		heap[current_index_in_heap] = child_index_in_queue;
+		indices_queue[child_index_in_queue] = current_index_in_heap + heap_index_offset;
+		indices_queue[current_index_in_queue] = child_index_in_heap + heap_index_offset;
+		current_index_in_heap = child_index_in_heap;
+		is_updated = MEDIANQUEUE_LOCAL_TRUE;
 	}
 	return is_updated;
 }
