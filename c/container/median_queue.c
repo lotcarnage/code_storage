@@ -425,10 +425,12 @@ MedianQueueElement MedianQueue_Dequeue(
 			MedianQueuePriavte_LHUpHeap(mq, index_in_heap);
 
 			/* RHの末尾をRHのルートに移動してDownHeap */
-			index_in_queue = mq->rh_heap_[tail_index_in_rh_heap];
-			mq->rh_heap_[0] = index_in_queue;
-			mq->buffer_for_heap_indices_[index_in_queue] = 0U + heap_index_offset;
-			MedianQueuePriavte_RHDownHeap(mq, 0U);
+			if (tail_index_in_rh_heap != 0U) {
+				index_in_queue = mq->rh_heap_[tail_index_in_rh_heap];
+				mq->rh_heap_[0] = index_in_queue;
+				mq->buffer_for_heap_indices_[index_in_queue] = 0U + heap_index_offset;
+				MedianQueuePriavte_RHDownHeap(mq, 0U);
+			}
 		}
 	} else {
 		/* 要素数が偶数=左右ヒープ木の要素数が同じ */
@@ -445,11 +447,13 @@ MedianQueueElement MedianQueue_Dequeue(
 			/* 埋めた箇所を起点にRHをUpHeap */
 			MedianQueuePriavte_RHUpHeap(mq, index_in_heap);
 
-			/* LHの末尾をLHのルートに移動してDownHeap */
-			index_in_queue = mq->lh_heap_[tail_index_in_lh_heap];
-			mq->lh_heap_[0] = index_in_queue;
-			mq->buffer_for_heap_indices_[index_in_queue] = 0U;
-			MedianQueuePriavte_LHDownHeap(mq, 0U);
+			if (tail_index_in_lh_heap != 0U) {
+				/* LHの末尾をLHのルートに移動してDownHeap */
+				index_in_queue = mq->lh_heap_[tail_index_in_lh_heap];
+				mq->lh_heap_[0] = index_in_queue;
+				mq->buffer_for_heap_indices_[index_in_queue] = 0U;
+				MedianQueuePriavte_LHDownHeap(mq, 0U);
+			}
 		} else {
 			/* LHから要素を取り出した */
 			/* 取り出した箇所にLHの末尾を移動する */
