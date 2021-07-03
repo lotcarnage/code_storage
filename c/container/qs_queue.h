@@ -37,6 +37,10 @@ typedef struct QSQueue_ {
 /*****************************************************************************
  * Function Declaration
  *****************************************************************************/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void QSQueue_Construct(
 	QSQueue* qsq_object_memory,
 	QSQueueElement* buffer_for_elements,
@@ -66,5 +70,9 @@ void QSQueue_Enqueue(
 
 QSQueueElement QSQueue_Dequeue(
 	QSQueue* qsq);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* QS_QUEUE_H_INCLUDED */

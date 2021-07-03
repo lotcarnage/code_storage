@@ -39,6 +39,10 @@ typedef struct MedianQueue_ {
 /*****************************************************************************
  * Function Declaration
  *****************************************************************************/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void MedianQueue_Construct(
 	MedianQueue* mq_object_memory,
 	MedianQueueElement* buffer_for_elements,
@@ -69,5 +73,9 @@ void MedianQueue_Enqueue(
 
 MedianQueueElement MedianQueue_Dequeue(
 	MedianQueue* mq);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* MEDIAN_QUEUE_H_INCLUDED */
