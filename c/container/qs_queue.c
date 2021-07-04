@@ -47,7 +47,7 @@ static uint32_t QSQueuePrivate_GetNumElements(
 	return (qsq->wp_ - qsq->rp_);
 }
 
-static int qsort_compare(const void* plhv, void* prhv)
+static int qsort_compare(const void* plhv, const void* prhv)
 {
 	QSQueueElement lhv = *(const QSQueueElement*)plhv;
 	QSQueueElement rhv = *(const QSQueueElement*)prhv;
