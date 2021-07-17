@@ -133,6 +133,14 @@ def intlog2_py_string(v):
 def intlog2_py_bit_length(v):
     return v.bit_length()
 
+def intlog2_py_bit_length_on_python(v):
+    msb = 0;
+    while (v >= 32):
+        msb +=6;
+        v >>= 6;
+    msb += bit8_table[v]
+    return msb
+
 if __name__ == "__main__":
     import time
     n = 1000000
@@ -150,6 +158,7 @@ if __name__ == "__main__":
     results.append(_time(intlog2_16bit_table))
     results.append(_time(intlog2_py_string))
     results.append(_time(intlog2_py_bit_length))
+    results.append(_time(intlog2_py_bit_length_on_python))
 
     for v in results:
         print(f"|{v[0]:20}|{v[1]:8.6f}|")
