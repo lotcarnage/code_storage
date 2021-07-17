@@ -127,6 +127,11 @@ def intlog2_16bit_table(v):
     else: # 0x0000ffff
         return bit16_table[v]
 
+def intlog2_py_string(v):
+    return len(bin(v)) - 2
+
+def intlog2_py_bit_length(v):
+    return v.bit_length()
 
 if __name__ == "__main__":
     import time
@@ -143,6 +148,8 @@ if __name__ == "__main__":
     results.append(_time(intlog2_binsearch))
     results.append(_time(intlog2_8bit_table))
     results.append(_time(intlog2_16bit_table))
+    results.append(_time(intlog2_py_string))
+    results.append(_time(intlog2_py_bit_length))
 
     for v in results:
         print(f"|{v[0]:20}|{v[1]:8.6f}|")
